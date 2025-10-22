@@ -9,7 +9,7 @@ def encode_image(image_file):
 
 # Configuración de la página
 st.set_page_config(page_title="Museo del Arte Perdido ", layout="centered", initial_sidebar_state="collapsed")
-st.title("🕵️‍♀️ Museo del Arte Perdido")
+st.title(" Museo del Arte ")
 st.markdown("Explora el misterio detrás de cada imagen. La IA actuará como un **curador experto** que analiza su origen, técnica y significado oculto.")
 
 # Ingreso de API Key
