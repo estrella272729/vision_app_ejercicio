@@ -8,12 +8,12 @@ def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode("utf-8")
 
 # Configuración de la página
-st.set_page_config(page_title="Museo del Arte Perdido 🎨", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Museo del Arte Perdido ", layout="centered", initial_sidebar_state="collapsed")
 st.title("🕵️‍♀️ Museo del Arte Perdido")
 st.markdown("Explora el misterio detrás de cada imagen. La IA actuará como un **curador experto** que analiza su origen, técnica y significado oculto.")
 
 # Ingreso de API Key
-ke = st.text_input('🔑 Ingresa tu Clave de OpenAI', type="password")
+ke = st.text_input(' Ingresa tu Clave de OpenAI', type="password")
 if ke:
     os.environ['OPENAI_API_KEY'] = ke
 else:
@@ -27,11 +27,11 @@ client = OpenAI(api_key=api_key) if api_key else None
 uploaded_file = st.file_uploader("📷 Sube una imagen para analizar", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
-    with st.expander("🖼️ Vista previa de la imagen", expanded=True):
+    with st.expander("Vista previa de la imagen", expanded=True):
         st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
 
 # Opción para contexto adicional
-show_details = st.toggle("📝 Añadir detalles o contexto histórico", value=False)
+show_details = st.toggle(" Añadir detalles o contexto histórico", value=False)
 additional_details = ""
 if show_details:
     additional_details = st.text_area(
@@ -81,7 +81,7 @@ if uploaded_file is not None and api_key and analyze_button:
                     full_response += completion.choices[0].delta.content
                     message_placeholder.markdown(full_response + "▌")
 
-            message_placeholder.markdown("### 🧾 Análisis del Curador:\n" + full_response)
+            message_placeholder.markdown("###  Análisis del Curador:\n" + full_response)
 
         except Exception as e:
             st.error(f"Ocurrió un error: {e}")
