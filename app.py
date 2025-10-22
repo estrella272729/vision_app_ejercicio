@@ -3,96 +3,90 @@ import streamlit as st
 import base64
 from openai import OpenAI
 
-# Function to encode the image to base64
+# Función para convertir imagen a base64
 def encode_image(image_file):
     return base64.b64encode(image_file.getvalue()).decode("utf-8")
 
+# Configuración de la página
+st.set_page_config(page_title="Museo del Arte Perdido 🎨", layout="centered", initial_sidebar_state="collapsed")
+st.title("🕵️‍♀️ Museo del Arte Perdido")
+st.markdown("Explora el misterio detrás de cada imagen. La IA actuará como un **curador experto** que analiza su origen, técnica y significado oculto.")
 
-st.set_page_config(page_title="Analisis de imagen", layout="centered", initial_sidebar_state="collapsed")
-# Streamlit page setup
-st.title("Análisis de Imagen:🤖🏞️")
-ke = st.text_input('Ingresa tu Clave')
-os.environ['OPENAI_API_KEY'] = ke
+# Ingreso de API Key
+ke = st.text_input('🔑 Ingresa tu Clave de OpenAI', type="password")
+if ke:
+    os.environ['OPENAI_API_KEY'] = ke
+else:
+    st.warning("Por favor ingresa tu clave de OpenAI para continuar.")
 
+# Inicializa cliente OpenAI
+api_key = os.environ.get('OPENAI_API_KEY')
+client = OpenAI(api_key=api_key) if api_key else None
 
-# Retrieve the OpenAI API Key from secrets
-api_key = os.environ['OPENAI_API_KEY']
-
-# Initialize the OpenAI client with the API key
-client = OpenAI(api_key=api_key)
-
-# File uploader allows user to add their own image
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+# Subir imagen
+uploaded_file = st.file_uploader("📷 Sube una imagen para analizar", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
-    # Display the uploaded image
-    with st.expander("Image", expanded = True):
+    with st.expander("🖼️ Vista previa de la imagen", expanded=True):
         st.image(uploaded_file, caption=uploaded_file.name, use_container_width=True)
 
-# Toggle for showing additional details input
-show_details = st.toggle("Adiciona detalles sobre la imagen", value=False)
-
+# Opción para contexto adicional
+show_details = st.toggle("📝 Añadir detalles o contexto histórico", value=False)
+additional_details = ""
 if show_details:
-    # Text input for additional details about the image, shown only if toggle is True
     additional_details = st.text_area(
-        "Adiciona contexto de la imagen aqui:",
+        "Describe la imagen o añade información sobre su procedencia:",
+        placeholder="Ejemplo: Esta pintura fue encontrada en una galería abandonada en París...",
         disabled=not show_details
     )
 
-# Button to trigger the analysis
-analyze_button = st.button("Analiza la imagen", type="secondary")
+# Botón de análisis
+analyze_button = st.button("🔍 Analizar como Curador de Arte")
 
-# Check if an image has been uploaded, if the API key is available, and if the button has been pressed
+# Análisis
 if uploaded_file is not None and api_key and analyze_button:
-
-    with st.spinner("Analizando ..."):
-        # Encode the image
+    with st.spinner("Analizando obra... 🧠🎨"):
         base64_image = encode_image(uploaded_file)
-    
-        prompt_text = ("Describe what you see in the image in spanish")
-    
+        
+        prompt_text = (
+            "Eres un curador experto del Museo del Arte Perdido. "
+            "Analiza la imagen y ofrece una descripción detallada y poética en español. "
+            "Incluye su posible época, estilo artístico, materiales, significado simbólico y emoción transmitida."
+        )
+
         if show_details and additional_details:
-            prompt_text += (
-                f"\n\nAdditional Context Provided by the User:\n{additional_details}"
-            )
-    
-        # Create the payload for the completion request - CORRECTED FORMAT
+            prompt_text += f"\n\nContexto adicional proporcionado por el usuario:\n{additional_details}"
+
         messages = [
             {
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt_text},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}"
-                        }
-                    },
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
                 ],
             }
         ]
-    
-        # Make the request to the OpenAI API
+
         try:
-            # Stream the response
             full_response = ""
             message_placeholder = st.empty()
+
             for completion in client.chat.completions.create(
-                model="gpt-4o", messages=messages,   
-                max_tokens=1200, stream=True
+                model="gpt-4o",
+                messages=messages,
+                max_tokens=1000,
+                stream=True
             ):
-                # Check if there is content to display
                 if completion.choices[0].delta.content is not None:
                     full_response += completion.choices[0].delta.content
                     message_placeholder.markdown(full_response + "▌")
-            # Final update to placeholder after the stream ends
-            message_placeholder.markdown(full_response)
-    
+
+            message_placeholder.markdown("### 🧾 Análisis del Curador:\n" + full_response)
+
         except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error(f"Ocurrió un error: {e}")
 else:
-    # Warnings for user action required
     if not uploaded_file and analyze_button:
-        st.warning("Please upload an image.")
+        st.warning("Por favor sube una imagen antes de analizar.")
     if not api_key:
-        st.warning("Por favor ingresa tu API key.")
+        st.warning("Por favor ingresa tu clave de API.")
